@@ -58,15 +58,28 @@
 1. wikibase的namespace
   - 参考文献
     - https://www.mediawiki.org/wiki/Extension:Wikibase_Repository/zh#Setting_up_items_in_the_main_namespace
-  - 文件目录
+  - 文件路径
     - mediawiki-1.29.0\extensions\Wikibase\repo\config\ Wikibase.example.php
   - 涉及变量
     1. $baseNs —— 主命名空间（值 = 120）
     2. \$WB_NS_ITEM —— 术语命名空间（值 = $baseNs = 120）
     3. \$WB_NS_PROPERTY —— 属性命名空间（值 = $baseNs+2 = 122）
     4. $wgExtraNamespaces —— 全局数组变量，存放命名空间
-      - 例：$wgExtraNamespaces[WB_NS_ITEM] = 'Item'
+       - 例：$wgExtraNamespaces[WB_NS_ITEM] = 'Item'
     5. $wgWBRepoSettings —— 全局二维数组变量，存放实体与命名空间的对应关系，“由它告诉wikibase哪个命名空间使用哪种实体”
-      - 例：$wgWBRepoSettings\['entityNamespaces']['item'] = WB_NS_ITEM;
+       - 例：$wgWBRepoSettings\['entityNamespaces']['item'] = WB_NS_ITEM;
   - 数据库
     - page表的page_namespace列存储namespace的id（120、122）
+2. 实体操作涉及的JS
+  - 文件路径
+    - mediawiki-1.29.0\extensions\Wikibase\vendor\wikibase\javascript-api\src\RepoApi.js
+  - 说明
+    - 该文件定义了一个api类——WbApiRepoApi，并在它的原型上扩展了createEntity、editEntity、getEntities、searchEntities等方法，每个方法均以ajax的形式向后端提交执行该操作所需要的字段信息，如action、search、id
+3. GitHub Wikidata工具库——SQID工具
+  1. 概要
+    - SQID是一个用来解析、浏览、查询维基数据的工具。
+    - 它是一个前端应用，基于AngularJS、jQuery和Bootstrap构建，使用SQID/src/data/exampleData目录下的classes.json、properties.json和statistics.json来充当“数据库”（只是wikidata库的一部分）。
+    - 关于JSON格式的说明记录在SQID/src/data/format.md。
+    - 它的JSON库并不是自动更新的，而是由wiki的项目组每一两周更新维护一次（基于wikidata的库），也提供了基于Python的更新脚本（即爬虫，文件路径是SQID/helpers/python/dataUpdate.py），供工具使用者自己更新。
+  2. 用途
+    - 快速查询维基百科数据，轻量级wikidata浏览工具（可能是类似教学、示范的作用。。）
