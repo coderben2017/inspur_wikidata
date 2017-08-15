@@ -83,3 +83,51 @@
     - 它的JSON库并不是自动更新的，而是由wiki的项目组每一两周更新维护一次（基于wikidata的库），也提供了基于Python的更新脚本（即爬虫，文件路径是SQID/helpers/python/dataUpdate.py），供工具使用者自己更新。
   2. 用途
     - 快速查询维基百科数据，轻量级wikidata浏览工具（可能是类似教学、示范的作用。。）
+
+### 8月14日
+1. 整理“创建属性”功能的SQL模板
+  - wikibase创建新属性时使用的是后端通信，没有用Ajax。
+  - 在mediawiki-1.29.0\includes\libs\rdbms\database\Database.php中的query方法内加入输出语句，这样正常创建属性时就把执行的所有SQL中的INSERT和UPDATE语句写入TXT文本文件，然后我们越过系统，直接在新数据库上执行这些INSERT和UPDATE，模拟创建属性，然后测试系统能否找到并使用这个属性，最终测试通过。
+  - 该模板已整理，换库可用（只需要修改id、rev_id、page_id等字段来适配本地库）
+2. 梳理创建属性property
+  - 分类（13种）
+    1. Commons media file    共享资源媒体文件
+    2. External identifier    外部标识符
+    3. Geographic coordinates    地理坐标
+    4. Geographic shape    地理形状
+    5. Item    项
+    6. Monolingual text    单语文本
+    7. Point in time    时间点
+    8. Peroperty    属性
+    9. Quantity    数量
+    10. String    字符串
+    11. Tabular data     表格数据
+    12. URL     统一资源定位符
+    13. Mathematical expression      数学表达式
+  - 对应数据库 —— wb_property_info表
+    - pi_property_id存储property的id，pi_type字段存储property类型，pi_info存储json格式的property类型
+
+### 8月15日
+1. 解析wikibase的html渲染方式
+  - html涉及文件：
+    - mediawiki-1.29.0\extensions\Wikibase\view\src\ItemView.php
+    - mediawiki-1.29.0\extensions\Wikibase\view\src\PropertyView.php
+    - mediawiki-1.29.0\extensions\Wikibase\view\src\EntityView.php
+    - mediawiki-1.29.0\extensions\Wikibase\view\src\Template\ TemplateFactory.php
+    - 注：可以通过EntityView.php中的getHTML()方法截取新增页面时的渲染的html，同时我们验证到，查询item时查询结果页面的生成没有走这个函数。
+  - php => html DOM 渲染模板
+    - mediawiki-1.29.0\extensions\Wikibase\view\resources\templates.php
+  - jquery、ui资源索引文件
+    -  mediawiki-1.29.0\extensions\Wikibase\view\resources\jquery\ resources.php
+    -  mediawiki-1.29.0\extensions\Wikibase\view\resources\jquery\ui\ resources.php
+    -  mediawiki-1.29.0\extensions\Wikibase\view\resources\wikibase\ resources.php
+  - jquery、ui资源目录
+     -  mediawiki-1.29.0\extensions\Wikibase\view\resources\jquery\*
+2. 整理查询item、查询property涉及的sql语句
+3. 整理移除声明（property）涉及的sql
+  - 移除一条声明即解除这个property与当前item的关系，在数据库wb_changes表的change_type字段中显示为wikibase-item~update，在change_info字段中存储一个json，记录该操作的详细信息
+  - 移除声明、添加声明都会在recentchanges表中插入一条记录，操作类型体现在rc_comment字段中。
+    - 移除时值为'/* wbsetclaim-create:2||1 */ [[Property:P3]]: [[Item:Q2]]'
+    - 添加时值为'/* wbremoveclaims-remove:1| */ [[Property:P3]]: [[Item:Q2]]'
+  - site_stats表的ss_total_edits字段值加1，记录编辑次数
+  - searchindex表中新增了一条记录（但字段值是一种特殊编码，没看懂）
